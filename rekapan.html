@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekapan Black Warz</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --secondary-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            --accent-color: #e94560;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --dark-bg: #1a1a2e;
+            --light-text: #f1f1f1;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: var(--secondary-gradient);
+            color: var(--light-text);
+            background-attachment: fixed;
+        }
+        
+        .container {
+            max-width: 650px;
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: none;
+            overflow: hidden;
+            background: rgba(26, 26, 46, 0.9);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        
+        .card-header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(233, 69, 96, 0.1) 0%, rgba(233, 69, 96, 0) 70%);
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: rotate(30deg) translate(-30%, -30%); }
+            100% { transform: rotate(30deg) translate(30%, 30%); }
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+            color: white;
+        }
+        
+        .btn-danger {
+            border-radius: 10px;
+            padding: 12px 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+            color: white;
+        }
+        
+        .rekapan-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent-color);
+            transform: scale(1);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .rekapan-item:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .total-tagihan {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+        
+        .icon {
+            font-size: 1.3rem;
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+        
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+        
+        /* Password Modal */
+        .modal-content {
+            background: var(--dark-bg);
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .container {
+                margin-top: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .card-header {
+                padding: 20px;
+            }
+            
+            .rekapan-item {
+                padding: 12px;
+            }
+        }
+        
+        /* Glow effect */
+        .glow {
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+        
+        /* Badge style */
+        .badge-custom {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        /* New styles for phone numbers and DB icon */
+        .phone-number {
+            color: #4dabf7; /* Bright blue for better visibility */
+            font-weight: 600;
+        }
+
+        .db-icon {
+            color: #20c997; /* Teal color for DB icon */
+            margin-right: 8px;
+        }
+
+        .db-count {
+            color: #fcc419; /* Yellow color for DB count */
+            font-weight: 500;
+        }
+
+        /* Summary section styles */
+        .summary-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-label {
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-weight: 600;
+        }
+
+        .total-db {
+            color: #20c997; /* Teal color for total DB */
+        }
+
+        .total-tagihan-summary {
+            color: #ff8787; /* Light red for total tagihan */
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"></i> ✨ REKAPAN BLACK WARZ ✨</h6>
+                <h8 class="mb-0 mt-2">Catat dan hitung tagihan DB By Warz</h8>
+                <span class="badge badge-custom mt-2">PROTECTED</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-4 animate__animated animate__fadeInUp">
+                    <label for="phoneNumber" class="form-label"><i class="fas fa-phone icon"></i> Nomor Telepon</label>
+                    <input type="text" class="form-control animate__animated animate__fadeIn" id="phoneNumber" placeholder="Contoh: 081234567890" style="animation-delay: 0.1s;">
+                </div>
+                <div class="mb-4 animate__animated animate__fadeInUp">
+                    <label for="dbAmount" class="form-label"><i class="fas fa-database icon"></i> Jumlah DB</label>
+                    <input type="number" class="form-control animate__animated animate__fadeIn" id="dbAmount" placeholder="Contoh: 30" style="animation-delay: 0.2s;">
+                </div>
+                <button id="addBtn" class="btn btn-primary w-100 mb-3 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+                    <i class="fas fa-plus-circle"></i> Tambah Rekapan
+                </button>
+                <button id="clearBtn" class="btn btn-danger w-100 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                    <i class="fas fa-trash-alt"></i> Clear All Rekapan
+                </button>
+                
+                <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+                
+                <h5 class="section-title animate__animated animate__fadeInUp" style="animation-delay: 0.5s;"><i class="fas fa-list icon"></i> Daftar Rekapan</h5>
+                <div id="rekapanList" class="animate__animated animate__fadeIn" style="animation-delay: 0.6s; max-height: 400px; overflow-y: auto;"></div>
+                
+                <!-- New Summary Section -->
+                <div class="summary-container animate__animated animate__fadeInUp" style="animation-delay: 0.7s;">
+                    <div class="summary-item">
+                        <span class="summary-label"><i class="fas fa-database db-icon"></i>Total DB :</span>
+                        <span id="totalDbAll" class="summary-value total-db">0 DB</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label"><i class="fas fa-money-bill-wave icon"></i> Total Pengasilan:</span>
+                        <span id="totalAll" class="summary-value total-tagihan-summary">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-lock"></i> Konfirmasi Password</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="passwordInput" class="form-label">Masukkan Password:</label>
+                        <input type="password" class="form-control" id="passwordInput" placeholder="Password">
+                    </div>
+                    <div id="passwordError" class="text-danger" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i> Password salah!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="confirmClearBtn" class="btn btn-danger">Hapus Semua</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Inisialisasi Firebase dengan konfigurasi yang Anda berikan
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrUNut5GvvMZjvF3ibAronndcdvojLrF0",
+            authDomain: "cihiyy.firebaseapp.com",
+            projectId: "cihiyy",
+            storageBucket: "cihiyy.appspot.com",
+            messagingSenderId: "820789392940",
+            appId: "1:820789392940:web:b094a76eb2bb5cf783c389",
+            measurementId: "G-3JMBTJJMZK",
+            databaseURL: "https://cihiyy-default-rtdb.firebaseio.com/"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // DOM Elements
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const dbAmountInput = document.getElementById('dbAmount');
+        const addBtn = document.getElementById('addBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const rekapanList = document.getElementById('rekapanList');
+        const totalAllElement = document.getElementById('totalAll');
+        const totalDbAllElement = document.getElementById('totalDbAll');
+        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmClearBtn = document.getElementById('confirmClearBtn');
+        const passwordError = document.getElementById('passwordError');
+
+        // Correct password (change this to your desired password)
+        const CORRECT_PASSWORD = "warz";
+
+        // Load data from Firebase
+        function loadRekapan() {
+            database.ref('rekapan').on('value', (snapshot) => {
+                const data = snapshot.val();
+                rekapanList.innerHTML = '';
+                let totalAll = 0;
+                let totalDbAll = 0;
+                
+                if (data) {
+                    // Convert object to array and sort by timestamp
+                    const rekapanArray = Object.entries(data).map(([key, value]) => ({
+                        id: key,
+                        ...value
+                    })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    rekapanArray.forEach((item, index) => {
+                        const total = item.dbAmount * 600;
+                        totalAll += total;
+                        totalDbAll += item.dbAmount;
+                        
+                        const rekapanItem = document.createElement('div');
+                        rekapanItem.className = 'rekapan-item';
+                        rekapanItem.style.animationDelay = `${index * 0.1}s`;
+                        
+                        rekapanItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong><i class="fas fa-phone"></i> <span class="phone-number">${item.phoneNumber}</span></strong><br>
+                                    <span><i class="fas fa-database db-icon"></i> <span class="db-count">${item.dbAmount} DB</span></span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="total-tagihan">Rp ${total.toLocaleString('id-ID')}</span><br>
+                                    <small class="text-muted">${formatDate(item.timestamp)}</small>
+                                </div>
+                            </div>
+                        `;
+                        rekapanList.appendChild(rekapanItem);
+                    });
+                }
+                
+                totalAllElement.textContent = `Rp ${totalAll.toLocaleString('id-ID')}`;
+                totalDbAllElement.textContent = `${totalDbAll} DB`;
+                
+                // Add pulse animation to totals when updated
+                [totalAllElement, totalDbAllElement].forEach(el => {
+                    el.classList.remove('pulse');
+                    void el.offsetWidth; // Trigger reflow
+                    el.classList.add('pulse');
+                });
+            });
+        }
+
+        // Format date to Indonesian format
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Add new rekapan with animation
+        addBtn.addEventListener('click', () => {
+            const phoneNumber = phoneNumberInput.value.trim();
+            const dbAmount = parseInt(dbAmountInput.value);
+            
+            if (!phoneNumber || isNaN(dbAmount)) {
+                // Shake animation for error
+                const inputs = [phoneNumberInput, dbAmountInput];
+                inputs.forEach(input => {
+                    input.classList.add('animate__animated', 'animate__headShake');
+                    input.addEventListener('animationend', () => {
+                        input.classList.remove('animate__animated', 'animate__headShake');
+                    });
+                });
+                return;
+            }
+            
+            const newRekapan = {
+                phoneNumber,
+                dbAmount,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add loading animation to button
+            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menambahkan...';
+            addBtn.disabled = true;
+            
+            database.ref('rekapan').push(newRekapan)
+                .then(() => {
+                    // Success animation
+                    addBtn.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+                    addBtn.classList.remove('btn-primary');
+                    addBtn.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Rekapan';
+                        addBtn.classList.remove('btn-success');
+                        addBtn.classList.add('btn-primary');
+                        addBtn.disabled = false;
+                    }, 1500);
+                    
+                    // Clear inputs
+                    phoneNumberInput.value = '';
+                    dbAmountInput.value = '';
+                    phoneNumberInput.focus();
+                })
+                .catch((error) => {
+                    console.error('Error adding document: ', error);
+                    // Error animation
+                    addBtn.innerHTML = '<i class="fas fa-times"></i> Gagal!';
+                    addBtn.classList.remove('btn-primary');
+                    addBtn.classList.add('btn-danger');
+                    
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Rekapan';
+                        addBtn.classList.remove('btn-danger');
+                        addBtn.classList.add('btn-primary');
+                        addBtn.disabled = false;
+                    }, 1500);
+                });
+        });
+
+        // Clear all rekapan with password confirmation
+        clearBtn.addEventListener('click', () => {
+            passwordModal.show();
+            passwordInput.value = '';
+            passwordError.style.display = 'none';
+        });
+
+        // Handle password confirmation
+        confirmClearBtn.addEventListener('click', () => {
+            if (passwordInput.value === CORRECT_PASSWORD) {
+                passwordError.style.display = 'none';
+                
+                // Show processing state
+                confirmClearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+                confirmClearBtn.disabled = true;
+                
+                database.ref('rekapan').remove()
+                    .then(() => {
+                        // Show success state
+                        confirmClearBtn.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+                        setTimeout(() => {
+                            passwordModal.hide();
+                            confirmClearBtn.innerHTML = 'Hapus Semua';
+                            confirmClearBtn.disabled = false;
+                        }, 1000);
+                    })
+                    .catch((error) => {
+                        console.error('Error clearing rekapan: ', error);
+                        confirmClearBtn.innerHTML = '<i class="fas fa-times"></i> Gagal!';
+                        setTimeout(() => {
+                            confirmClearBtn.innerHTML = 'Hapus Semua';
+                            confirmClearBtn.disabled = false;
+                        }, 1000);
+                    });
+            } else {
+                passwordError.style.display = 'block';
+                passwordInput.classList.add('animate__animated', 'animate__headShake');
+                passwordInput.addEventListener('animationend', () => {
+                    passwordInput.classList.remove('animate__animated', 'animate__headShake');
+                });
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('passwordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                passwordModal.hide();
+            }
+        });
+
+        // Load data when page loads
+        window.addEventListener('load', () => {
+            // Initial load with staggered animations
+            setTimeout(loadRekapan, 500);
+            
+            // Focus on phone number input
+            phoneNumberInput.focus();
+        });
+
+        // Add keyboard shortcut (Ctrl+Enter to submit)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (phoneNumberInput.value && dbAmountInput.value) {
+                    addBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
